@@ -56,6 +56,7 @@ pytest
 ## 3. Architecture & Domain Language
 
 Before writing code, familiarize yourself with our project domain:
+- **Template Authoring**: Read [`TEMPLATE_GUIDE.md`](TEMPLATE_GUIDE.md) for complete template creation instructions, boilerplates, and print CSS rules.
 - **Architecture & Subsystems**: Read [`docs/architecture.md`](docs/architecture.md) for data flow and component boundaries.
 - **Domain Vocabulary**: Read [`GLOSSARY.md`](GLOSSARY.md). Always use established project terms (`Template Bundle`, `Template`, `Payload`, `Schema`, `Renderer`, `Generated Document`, `Preview`, `Render Ready Signal`).
 - **Architecture Decision Records**: Consult [`docs/adr/`](docs/adr/) for rationale on technical choices (Playwright Chromium, colocated bundles, dual render readiness).
@@ -88,6 +89,8 @@ pytest tests/test_cli_generate.py
 ---
 
 ## 5. Adding a Template Bundle Checklist
+
+> **Comprehensive Guide**: See [`TEMPLATE_GUIDE.md`](TEMPLATE_GUIDE.md) for copy-paste boilerplates for commercial invoices, certificates, and print CSS recipes.
 
 When contributing a new template bundle:
 1. Create `templates/<bundle_name>/`.

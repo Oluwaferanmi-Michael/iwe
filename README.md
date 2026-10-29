@@ -143,9 +143,9 @@ Compile the template with the provided payload and open it in your web browser.
 
 ## Documentation & Guides
 
+- **[Template Creation Guide (Comprehensive Field Manual)](TEMPLATE_GUIDE.md)**: Authoritative field manual with copy-paste boilerplates for commercial invoices and award certificates, Pydantic recipes, print CSS rules, and layout troubleshooting.
 - **[System Architecture & Engine Internals](docs/architecture.md)**: Deep dive into the data flow, Mermaid component & sequence diagrams, subsystem boundaries, and execution models.
 - **[Contributor & Local Development Guide](CONTRIBUTING.md)**: Setup instructions, testing guidelines (`pytest`), PR workflow, and coding conventions.
-- **[Template Authoring Guide](docs/templates.md)**: Step-by-step guide to authoring new template bundles, writing Pydantic validation schemas, designing CSS `@page` print styles, and signaling render readiness.
 - **[Domain Glossary](GLOSSARY.md)**: Ubiquitous language and canonical vocabulary definitions for the project.
 - **[Architecture Decision Records](docs/adr/)**: Architectural decisions regarding Playwright Chromium, colocated bundles, and render-readiness strategy.
 
@@ -169,12 +169,13 @@ iwe/
 │       └── sample.json        # Test payload
 ├── docs/
 │   ├── architecture.md        # System Architecture & Engine Internals
-│   ├── templates.md           # Template Authoring Guide
+│   ├── templates.md           # Template Authoring Reference
 │   ├── spec.md                # System specification
 │   ├── adr/                   # Architecture Decision Records
 │   └── agents/                # Machine/agent operational guidelines
 ├── generated/                 # Default destination for generated PDFs
 ├── tests/                     # Test suite (CLI seam tests)
+├── TEMPLATE_GUIDE.md          # Comprehensive Template Creation Guide
 ├── CONTRIBUTING.md            # Contributor onboarding & testing guide
 ├── pyproject.toml             # Package configuration & dependencies
 └── GLOSSARY.md                # Project domain language definitions

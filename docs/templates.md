@@ -1,6 +1,9 @@
-# Template Authoring Guide
+# Template Authoring Reference
 
-This guide walks you through creating, styling, and configuring custom template bundles for `iwe`.
+> [!NOTE]
+> For the comprehensive, definitive field manual containing copy-paste starter boilerplates (commercial invoices, certificates), schema recipes, and print CSS troubleshooting, see **[`TEMPLATE_GUIDE.md`](../TEMPLATE_GUIDE.md)** at the repository root.
+
+This reference provides a summary of creating, styling, and configuring custom template bundles for `iwe`.
 
 ---
 
