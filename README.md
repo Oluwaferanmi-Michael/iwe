@@ -12,7 +12,7 @@
 - **Modern Web Standards**: Full support for CSS Grid, Flexbox, web fonts, inline SVG, and modern typography powered by Playwright headless Chromium.
 - **Strongly-Typed Contracts**: Every template bundle defines a Pydantic `Schema`. Payloads are strictly validated before launching the browser, catching errors before render time.
 - **Modular Colocated Bundles**: Each document type lives in its own self-contained directory with its markup, schema, configuration, assets, and sample mock data.
-- **Dual Render Readiness**: Waits for `networkidle` by default with support for an explicit `#render-ready` selector to ensure client-side charts and web fonts finish rendering before snapshotting.
+- **Dual Render Readiness**: Waits for `networkidle` by default with support for an explicit `#render-ready` selector or `window.__RENDER_READY__` flag to ensure client-side charts and web fonts finish rendering before snapshotting.
 - **Interactive Developer Preview**: Run `iwe preview` to open compiled templates with live mock data in your browser for rapid CSS/HTML tweaking.
 - **Built-in Formatting Filters**: Standard Jinja2 filters for currency (`| currency`), dates (`| dateformat`), and numbers (`| number`).
 
@@ -73,9 +73,9 @@ iwe generate multi-page-report --data templates/multi-page-report/sample.json
 ```
 The output PDF is saved to `generated/multi-page-report-<timestamp>.pdf`.
 
-You can also specify a custom output path:
+You can also specify a custom output path or margin overrides:
 ```bash
-iwe generate multi-page-report --data templates/multi-page-report/sample.json --output ./my_report.pdf
+iwe generate multi-page-report --data templates/multi-page-report/sample.json --output ./my_report.pdf --margin 15mm
 ```
 
 ### 4. Generate from inline JSON
@@ -98,14 +98,14 @@ iwe preview multi-page-report --data templates/multi-page-report/sample.json
 List all installed template bundles in `templates/` and their component status.
 
 ```bash
-iwe list [--templates-dir <path>]
+iwe list [--templates-dir <path>] [--json]
 ```
 
 ### `iwe sample <bundle_name>`
 Print the mock payload for a given bundle formatted as JSON.
 
 ```bash
-iwe sample multi-page-report
+iwe sample multi-page-report [--templates-dir <path>]
 ```
 
 ### `iwe generate <bundle_name> [OPTIONS]`
@@ -117,6 +117,8 @@ Compile the template with the provided payload and render it to a PDF.
 | `--output` | `-o` | Custom file path for output PDF (default: `generated/<bundle>-<timestamp>.pdf`) |
 | `--format` | `-f` | Page format override (e.g. `A4`, `Letter`, `Legal`) |
 | `--landscape` | | Render in landscape orientation |
+| `--margin` | `-m` | Margin override (e.g. `'10mm'` or `'top=10mm,bottom=10mm'`) |
+| `--json` | | Output result in machine-readable JSON format |
 | `--templates-dir` | `-t` | Custom templates directory path |
 
 ### `iwe preview <bundle_name> [OPTIONS]`
@@ -126,6 +128,7 @@ Compile the template with the provided payload and open it in your web browser.
 | --- | --- | --- |
 | `--data` | `-d` | **(Required)** Path to JSON payload file or inline JSON string |
 | `--open / --no-open` | | Automatically open system browser (default: true) |
+| `--json` | | Output preview URL in machine-readable JSON format |
 | `--templates-dir` | `-t` | Custom templates directory path |
 
 ---
@@ -135,6 +138,16 @@ Compile the template with the provided payload and open it in your web browser.
 - **`0`**: Success. The generated PDF path is printed to stdout.
 - **`1`**: Data validation error, missing bundle, or malformed input payload. Error details are printed to stderr.
 - **`2`**: Playwright browser execution or PDF rendering error.
+
+---
+
+## Documentation & Guides
+
+- **[System Architecture & Engine Internals](docs/architecture.md)**: Deep dive into the data flow, Mermaid component & sequence diagrams, subsystem boundaries, and execution models.
+- **[Contributor & Local Development Guide](CONTRIBUTING.md)**: Setup instructions, testing guidelines (`pytest`), PR workflow, and coding conventions.
+- **[Template Authoring Guide](docs/templates.md)**: Step-by-step guide to authoring new template bundles, writing Pydantic validation schemas, designing CSS `@page` print styles, and signaling render readiness.
+- **[Domain Glossary](GLOSSARY.md)**: Ubiquitous language and canonical vocabulary definitions for the project.
+- **[Architecture Decision Records](docs/adr/)**: Architectural decisions regarding Playwright Chromium, colocated bundles, and render-readiness strategy.
 
 ---
 
@@ -155,17 +168,14 @@ iwe/
 │       ├── config.json        # PDF print settings (margins, header/footer)
 │       └── sample.json        # Test payload
 ├── docs/
+│   ├── architecture.md        # System Architecture & Engine Internals
 │   ├── templates.md           # Template Authoring Guide
 │   ├── spec.md                # System specification
 │   ├── adr/                   # Architecture Decision Records
 │   └── agents/                # Machine/agent operational guidelines
 ├── generated/                 # Default destination for generated PDFs
+├── tests/                     # Test suite (CLI seam tests)
+├── CONTRIBUTING.md            # Contributor onboarding & testing guide
 ├── pyproject.toml             # Package configuration & dependencies
 └── GLOSSARY.md                # Project domain language definitions
 ```
-
----
-
-## Creating New Templates
-
-See [`docs/templates.md`](docs/templates.md) for a comprehensive step-by-step guide to authoring new template bundles, writing Pydantic validation schemas, designing CSS `@page` print styles, and signaling render readiness.
