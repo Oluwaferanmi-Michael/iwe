@@ -18,7 +18,7 @@ from rich.table import Table
 
 from iwe.bundle import BundleManager, BundleNotFoundError, SchemaLoadError, TemplateBundle
 from iwe.compiler import TemplateCompiler, load_payload_data, validate_payload
-from iwe.renderer import PdfRenderer, PdfRenderError
+from iwe.renderer import PdfRenderer, PdfRenderError, normalize_paper_format
 
 app = typer.Typer(
     name="iwe",
@@ -257,6 +257,18 @@ def generate(
     config = bundle.get_config()
     if format:
         config["format"] = format
+
+    # Validate / normalize paper format early
+    if "format" in config:
+        try:
+            config["format"] = normalize_paper_format(config["format"])
+        except ValueError as e:
+            if json_output:
+                err_console.print_json(json.dumps({"status": "error", "type": "InvalidFormatError", "message": str(e)}))
+            else:
+                err_console.print(f"[red]Format Error:[/red] {e}")
+            raise typer.Exit(code=1)
+
     if landscape is not None:
         config["landscape"] = landscape
     if margin:
