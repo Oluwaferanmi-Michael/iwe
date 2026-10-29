@@ -62,7 +62,7 @@ def test_cli_generate_success(sample_bundle_dir: Path, tmp_path: Path):
     result = runner.invoke(app, ["generate", "test-doc", "--data", str(sample_json_path)])
     
     assert result.exit_code == 0, result.stderr
-    assert "Generated PDF:" in result.stdout
+    assert "Generated Document:" in result.stdout
     
     # Verify generated PDF in default generated/ directory
     generated_dir = tmp_path / "generated"
@@ -86,6 +86,23 @@ def test_cli_generate_custom_output(sample_bundle_dir: Path, tmp_path: Path):
     assert result.exit_code == 0, result.stderr
     assert custom_pdf.exists()
     assert custom_pdf.read_bytes().startswith(b"%PDF-")
+
+
+def test_cli_generate_with_margin_and_json(sample_bundle_dir: Path, tmp_path: Path):
+    custom_pdf = tmp_path / "custom_margin.pdf"
+    result = runner.invoke(app, [
+        "generate", "test-doc",
+        "--data", '{"title": "Margin Test", "count": 9}',
+        "--output", str(custom_pdf),
+        "--margin", "15mm",
+        "--json",
+    ])
+    
+    assert result.exit_code == 0, result.stderr
+    assert custom_pdf.exists()
+    data = json.loads(result.stdout)
+    assert data["status"] == "success"
+    assert "custom_margin.pdf" in data["document_path"]
 
 
 def test_cli_generate_validation_failure(sample_bundle_dir: Path):
