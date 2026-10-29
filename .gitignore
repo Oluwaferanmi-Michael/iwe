@@ -1,0 +1,33 @@
+# Virtual environments
+.iwe/
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Output documents
+generated/
+.scratch/
+
+# Agent local configuration
+AGENTS.md
+
+# Build and distribution
+dist/
+build/
+*.egg-info/
