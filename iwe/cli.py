@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 from typing import Optional
+import webbrowser
 import typer
 from pydantic import ValidationError
 from rich.console import Console
@@ -79,6 +80,62 @@ def show_sample(
     except Exception as e:
         err_console.print(f"[red]Error loading sample:[/red] {e}")
         raise typer.Exit(code=1)
+
+
+@app.command("preview")
+def preview(
+    bundle_name: str = typer.Argument(..., help="Name of the template bundle to preview."),
+    data: str = typer.Option(..., "--data", "-d", help="Path to JSON payload file or raw inline JSON string."),
+    open_browser: bool = typer.Option(True, "--open/--no-open", help="Whether to automatically open browser."),
+    templates_dir: Optional[Path] = typer.Option(
+        None,
+        "--templates-dir",
+        "-t",
+        help="Path to the directory containing template bundles.",
+    ),
+) -> None:
+    """Compile and preview a template bundle in a web browser without emitting a PDF."""
+    manager = BundleManager(templates_dir=templates_dir)
+
+    try:
+        bundle = manager.get_bundle(bundle_name)
+    except BundleNotFoundError as e:
+        err_console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(code=1)
+
+    try:
+        raw_data = load_payload_data(data)
+    except Exception as e:
+        err_console.print(f"[red]Payload Error:[/red] {e}")
+        raise typer.Exit(code=1)
+
+    try:
+        schema_cls = bundle.get_schema_class()
+        validated_payload = validate_payload(raw_data, schema_cls)
+    except SchemaLoadError as e:
+        err_console.print(f"[red]Schema Error:[/red] {e}")
+        raise typer.Exit(code=1)
+    except ValidationError as e:
+        err_console.print(f"[red]Validation error for bundle '{bundle_name}':[/red]")
+        for err in e.errors():
+            loc = " -> ".join(str(loc_item) for loc_item in err["loc"])
+            err_console.print(f"  • [yellow]{loc}[/yellow]: {err['msg']}")
+        raise typer.Exit(code=1)
+
+    try:
+        compiler = TemplateCompiler(bundle)
+        rendered_html = compiler.compile(validated_payload)
+    except Exception as e:
+        err_console.print(f"[red]Compilation Error:[/red] {e}")
+        raise typer.Exit(code=1)
+
+    preview_file = bundle.path / "_preview.html"
+    preview_file.write_text(rendered_html, encoding="utf-8")
+    preview_uri = preview_file.resolve().as_uri()
+
+    console.print(f"[green]✓ Opening preview in browser:[/green] {preview_uri}")
+    if open_browser:
+        webbrowser.open(preview_uri)
 
 
 @app.command("generate")
