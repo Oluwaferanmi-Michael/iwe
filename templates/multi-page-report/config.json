@@ -1,0 +1,12 @@
+{
+  "format": "A4",
+  "landscape": false,
+  "print_background": true,
+  "margin": {
+    "top": "15mm",
+    "bottom": "15mm",
+    "left": "15mm",
+    "right": "15mm"
+  },
+  "footer_template": "<div style=\"font-size: 8px; color: #718096; width: 100%; display: flex; justify-content: space-between; padding: 0 15mm;\"><span>iwe Report</span><span>Page <span class=\"pageNumber\"></span> of <span class=\"totalPages\"></span></span></div>"
+}
