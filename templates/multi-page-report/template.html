@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ report_title }}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1a202c;
+      background-color: #ffffff;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    /* Page break helpers */
+    .page {
+      min-height: 250mm;
+      position: relative;
+    }
+
+    .page-break {
+      page-break-after: always;
+      break-after: page;
+    }
+
+    /* Cover Page */
+    .cover-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 255mm;
+      padding: 20mm 10mm;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background-color: #ebf8ff;
+      color: #2b6cb0;
+      border-radius: 4px;
+      margin-bottom: 24px;
+    }
+
+    .cover-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: #1a365d;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .cover-subtitle {
+      font-size: 16px;
+      color: #4a5568;
+      max-width: 550px;
+      line-height: 1.6;
+    }
+
+    .cover-divider {
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, #3182ce, #63b3ed);
+      margin: 28px 0;
+      border-radius: 2px;
+    }
+
+    .cover-meta {
+      background-color: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .meta-item-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #718096;
+      margin-bottom: 4px;
+    }
+
+    .meta-item-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    /* Inner Page Headers */
+    .section-header {
+      border-bottom: 2px solid #edf2f7;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2b6cb0;
+    }
+
+    /* Executive Summary */
+    .summary-box {
+      background-color: #f8fafc;
+      border-left: 4px solid #3182ce;
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 28px;
+      font-size: 13.5px;
+      color: #2d3748;
+      line-height: 1.7;
+    }
+
+    /* Metric Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .metric-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .metric-title {
+      font-size: 11px;
+      color: #718096;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1a202c;
+      margin-bottom: 6px;
+    }
+
+    .metric-change {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .change-positive {
+      color: #38a169;
+    }
+
+    .change-negative {
+      color: #e53e3e;
+    }
+
+    /* Chart Component */
+    .chart-container {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 32px;
+    }
+
+    .chart-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 12px;
+    }
+
+    /* Financial Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 28px;
+      font-size: 12.5px;
+    }
+
+    .data-table th {
+      background-color: #edf2f7;
+      color: #4a5568;
+      font-weight: 700;
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 2px solid #cbd5e0;
+    }
+
+    .data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #2d3748;
+    }
+
+    .data-table tr:nth-child(even) td {
+      background-color: #f7fafc;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    /* Sections */
+    .content-section {
+      margin-bottom: 24px;
+    }
+
+    .content-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 8px;
+    }
+
+    .content-body {
+      color: #4a5568;
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    .highlights-list {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    .highlights-list li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 6px;
+      color: #2d3748;
+    }
+
+    .highlights-list li::before {
+      content: "•";
+      color: #3182ce;
+      font-weight: bold;
+      font-size: 18px;
+      position: absolute;
+      left: 4px;
+      top: -3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PAGE 1: COVER PAGE -->
+  <div class="page page-break">
+    <div class="cover-container">
+      <div>
+        <span class="cover-badge">{{ company_name }}</span>
+        <h1 class="cover-title">{{ report_title }}</h1>
+        <div class="cover-divider"></div>
+        <p class="cover-subtitle">{{ subtitle }}</p>
+      </div>
+
+      <div class="cover-meta">
+        <div>
+          <div class="meta-item-label">Prepared For</div>
+          <div class="meta-item-value">{{ prepared_for }}</div>
+        </div>
+        <div>
+          <div class="meta-item-label">Reporting Period</div>
+          <div class="meta-item-value">{{ date }}</div>
+        </div>
+        <div>
+          <div class="meta-item-label">Prepared By</div>
+          <div class="meta-item-value">{{ prepared_by }}</div>
+        </div>
+        <div>
+          <div class="meta-item-label">Generated Via</div>
+          <div class="meta-item-value">iwe PDF Engine</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: EXECUTIVE SUMMARY & PERFORMANCE -->
+  <div class="page page-break">
+    <div class="section-header">
+      <h2 class="section-title">Executive Overview & Key Metrics</h2>
+      <span style="font-size: 11px; color: #a0aec0;">Page 2</span>
+    </div>
+
+    <div class="summary-box">
+      <strong>Executive Summary:</strong> {{ executive_summary }}
+    </div>
+
+    {% if metrics %}
+    <div class="metrics-grid">
+      {% for m in metrics %}
+      <div class="metric-card">
+        <div class="metric-title">{{ m.title }}</div>
+        <div class="metric-value">{{ m.value }}</div>
+        {% if m.change %}
+        <div class="metric-change {% if m.is_positive %}change-positive{% else %}change-negative{% endif %}">
+          {{ m.change }}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Visual Trend Bar Chart (Inline SVG) -->
+    <div class="chart-container">
+      <div class="chart-title">Quarterly Revenue Growth Trend (USD Millions)</div>
+      <svg viewBox="0 0 500 160" width="100%" height="160" xmlns="http://www.w3.org/2000/svg">
+        <!-- Grid lines -->
+        <line x1="50" y1="20" x2="480" y2="20" stroke="#edf2f7" stroke-width="1" />
+        <line x1="50" y1="60" x2="480" y2="60" stroke="#edf2f7" stroke-width="1" />
+        <line x1="50" y1="100" x2="480" y2="100" stroke="#edf2f7" stroke-width="1" />
+        <line x1="50" y1="140" x2="480" y2="140" stroke="#cbd5e0" stroke-width="1" />
+
+        <!-- Axis labels -->
+        <text x="35" y="24" font-size="9" fill="#a0aec0" text-anchor="end">$5.0M</text>
+        <text x="35" y="64" font-size="9" fill="#a0aec0" text-anchor="end">$4.0M</text>
+        <text x="35" y="104" font-size="9" fill="#a0aec0" text-anchor="end">$3.0M</text>
+        <text x="35" y="144" font-size="9" fill="#a0aec0" text-anchor="end">$0</text>
+
+        <!-- Bars -->
+        <!-- Q1 -->
+        <rect x="100" y="42" width="60" height="98" rx="4" fill="#63b3ed" />
+        <text x="130" y="34" font-size="10" font-weight="bold" fill="#2b6cb0" text-anchor="middle">$3.95M</text>
+        <text x="130" y="154" font-size="10" fill="#718096" text-anchor="middle">Q1 2026</text>
+
+        <!-- Q2 -->
+        <rect x="230" y="28" width="60" height="112" rx="4" fill="#4299e1" />
+        <text x="260" y="20" font-size="10" font-weight="bold" fill="#2b6cb0" text-anchor="middle">$4.41M</text>
+        <text x="260" y="154" font-size="10" fill="#718096" text-anchor="middle">Q2 2026</text>
+
+        <!-- Q3 -->
+        <rect x="360" y="16" width="60" height="124" rx="4" fill="#2b6cb0" />
+        <text x="390" y="10" font-size="10" font-weight="bold" fill="#2b6cb0" text-anchor="middle">$4.85M</text>
+        <text x="390" y="154" font-size="10" fill="#718096" text-anchor="middle">Q3 2026</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- PAGE 3: FINANCIAL TABLE & STRATEGIC OUTLOOK -->
+  <div class="page">
+    <div class="section-header">
+      <h2 class="section-title">Financial Breakdown & Strategic Outlook</h2>
+      <span style="font-size: 11px; color: #a0aec0;">Page 3</span>
+    </div>
+
+    {% if financial_table %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Reporting Period</th>
+          <th class="text-right">Revenue</th>
+          <th class="text-right">Expenses</th>
+          <th class="text-right">Net Income</th>
+          <th class="text-right">Operating Margin</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in financial_table %}
+        <tr>
+          <td><strong>{{ row.period }}</strong></td>
+          <td class="text-right">{{ row.revenue | currency }}</td>
+          <td class="text-right">{{ row.expenses | currency }}</td>
+          <td class="text-right">{{ row.net_income | currency }}</td>
+          <td class="text-right"><strong>{{ row.margin }}</strong></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {% for section in sections %}
+    <div class="content-section">
+      <h3 class="content-title">{{ section.title }}</h3>
+      <p class="content-body">{{ section.content }}</p>
+      {% if section.highlights %}
+      <ul class="highlights-list">
+        {% for h in section.highlights %}
+        <li>{{ h }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Render Ready Signal for Playwright -->
+  <div id="render-ready"></div>
+</body>
+</html>

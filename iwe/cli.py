@@ -49,10 +49,10 @@ def list_bundles(
     for bundle in bundles:
         table.add_row(
             bundle.name,
-            "✓" if bundle.has_template else "✗",
-            "✓" if bundle.has_schema else "✗",
-            "✓" if bundle.has_config else "✗",
-            "✓" if bundle.has_sample else "✗",
+            "[green]yes[/green]" if bundle.has_template else "[dim]no[/dim]",
+            "[green]yes[/green]" if bundle.has_schema else "[dim]no[/dim]",
+            "[green]yes[/green]" if bundle.has_config else "[dim]no[/dim]",
+            "[green]yes[/green]" if bundle.has_sample else "[dim]no[/dim]",
         )
 
     console.print(table)
@@ -119,7 +119,7 @@ def preview(
         err_console.print(f"[red]Validation error for bundle '{bundle_name}':[/red]")
         for err in e.errors():
             loc = " -> ".join(str(loc_item) for loc_item in err["loc"])
-            err_console.print(f"  • [yellow]{loc}[/yellow]: {err['msg']}")
+            err_console.print(f"  * [yellow]{loc}[/yellow]: {err['msg']}")
         raise typer.Exit(code=1)
 
     try:
@@ -133,7 +133,7 @@ def preview(
     preview_file.write_text(rendered_html, encoding="utf-8")
     preview_uri = preview_file.resolve().as_uri()
 
-    console.print(f"[green]✓ Opening preview in browser:[/green] {preview_uri}")
+    console.print(f"[green]Opening preview in browser:[/green] {preview_uri}")
     if open_browser:
         webbrowser.open(preview_uri)
 
@@ -180,7 +180,7 @@ def generate(
         err_console.print(f"[red]Validation error for bundle '{bundle_name}':[/red]")
         for err in e.errors():
             loc = " -> ".join(str(loc_item) for loc_item in err["loc"])
-            err_console.print(f"  • [yellow]{loc}[/yellow]: {err['msg']}")
+            err_console.print(f"  * [yellow]{loc}[/yellow]: {err['msg']}")
         raise typer.Exit(code=1)
 
     # 4. Compile HTML template
@@ -214,7 +214,7 @@ def generate(
             base_dir=bundle.path,
             config=config,
         )
-        console.print(f"[green]✓ Generated PDF:[/green] {final_pdf_path}")
+        console.print(f"[green]Generated PDF:[/green] {final_pdf_path}")
     except PdfRenderError as e:
         err_console.print(f"[red]Rendering Error:[/red] {e}")
         raise typer.Exit(code=2)
