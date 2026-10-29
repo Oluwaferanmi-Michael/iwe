@@ -147,7 +147,7 @@ iwe/
 │   ├── cli.py                 # Typer CLI application
 │   ├── bundle.py              # Template bundle manager and discovery
 │   ├── compiler.py            # Jinja2 template compiler and payload validation
-│   └── renderer.py            # Playwright headless Chromium PDF printer
+│   └── renderer.py            # Playwright headless Chromium Renderer
 ├── templates/                 # Modular template bundles
 │   └── multi-page-report/     # Starter multi-page executive report bundle
 │       ├── template.html      # HTML/Jinja2 template

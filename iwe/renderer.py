@@ -1,3 +1,4 @@
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -45,34 +46,54 @@ class PdfRenderer:
             if "footer_template" in config:
                 pdf_options["footer_template"] = config["footer_template"]
 
+        # Inject base href so relative assets resolve against the template bundle directory
+        base_uri = base_dir.resolve().as_uri() + "/"
+        base_tag = f'<base href="{base_uri}">'
+        if "<head>" in html_content:
+            prepared_html = html_content.replace("<head>", f"<head>\n    {base_tag}", 1)
+        else:
+            prepared_html = f"<head>{base_tag}</head>\n" + html_content
+
+        temp_dir = Path(tempfile.mkdtemp(prefix="iwe_render_"))
+        temp_file = temp_dir / "index.html"
+
         try:
+            temp_file.write_text(prepared_html, encoding="utf-8")
+
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
                 page = browser.new_page()
 
-                # Write HTML temporarily into base_dir so relative assets (images/CSS) resolve properly
-                temp_file = base_dir / f"_temp_render_{output_path.stem}.html"
+                # Navigate to the HTML file in isolated temp dir with networkidle wait
+                page.goto(temp_file.as_uri(), wait_until="networkidle")
+
+                # Dynamic dual render-readiness evaluation per ADR 0003
+                # Checks for window.__RENDER_READY__ === true OR #render-ready element in DOM
+                custom_selector = config.get("ready_selector", ready_selector)
+                ready_timeout = config.get("ready_timeout_ms", 3000)
                 try:
-                    temp_file.write_text(html_content, encoding="utf-8")
-                    page.goto(temp_file.as_uri(), wait_until="networkidle")
+                    page.wait_for_function(
+                        f"""() => {{
+                            if (window.__RENDER_READY__ === true) return true;
+                            if (document.querySelector('{custom_selector}')) return true;
+                            return false;
+                        }}""",
+                        timeout=ready_timeout,
+                    )
+                except Exception:
+                    # networkidle is already satisfied; proceed with PDF capture
+                    pass
 
-                    # Check for explicit render-ready selector
-                    try:
-                        # If selector is present in HTML, wait for it
-                        if ready_selector in html_content:
-                            page.wait_for_selector(ready_selector, timeout=5000)
-                    except Exception:
-                        pass  # Proceed if timeout, networkidle already satisfied
-
-                    page.pdf(**pdf_options)
-                finally:
-                    if temp_file.exists():
-                        try:
-                            temp_file.unlink()
-                        except OSError:
-                            pass
+                page.pdf(**pdf_options)
                 browser.close()
 
             return output_path
         except Exception as e:
             raise PdfRenderError(f"Playwright rendering failed: {e}") from e
+        finally:
+            # Clean up temporary render folder
+            if temp_dir.exists():
+                try:
+                    shutil.rmtree(temp_dir, ignore_errors=True)
+                except Exception:
+                    pass
