@@ -12,6 +12,41 @@ from typing import Any
 from playwright.sync_api import sync_playwright
 
 
+SUPPORTED_PAPER_FORMATS: dict[str, str] = {
+    "a0": "A0",
+    "a1": "A1",
+    "a2": "A2",
+    "a3": "A3",
+    "a4": "A4",
+    "a5": "A5",
+    "a6": "A6",
+    "letter": "Letter",
+    "legal": "Legal",
+    "tabloid": "Tabloid",
+    "ledger": "Ledger",
+}
+
+
+def normalize_paper_format(fmt: str) -> str:
+    """Normalize and validate paper format string.
+
+    Args:
+        fmt: Case-insensitive paper format string (e.g. 'a4', 'letter', 'A4').
+
+    Returns:
+        str: The canonical Playwright paper format string (e.g. 'A4', 'Letter').
+
+    Raises:
+        ValueError: If the paper format is unsupported.
+    """
+    cleaned = fmt.strip().lower()
+    if cleaned in SUPPORTED_PAPER_FORMATS:
+        return SUPPORTED_PAPER_FORMATS[cleaned]
+
+    valid_list = ", ".join(sorted(set(SUPPORTED_PAPER_FORMATS.values())))
+    raise ValueError(f"Unsupported paper format '{fmt}'. Supported formats are: {valid_list}")
+
+
 class PdfRenderError(Exception):
     """Raised when PDF rendering or Playwright browser execution fails."""
     pass
@@ -52,10 +87,14 @@ class PdfRenderer:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         config = config or {}
 
+        # Normalize paper format
+        raw_format = config.get("format", "A4")
+        canonical_format = normalize_paper_format(raw_format)
+
         # Merge defaults with config
         pdf_options: dict[str, Any] = {
             "path": str(output_path),
-            "format": config.get("format", "A4"),
+            "format": canonical_format,
             "landscape": config.get("landscape", False),
             "print_background": config.get("print_background", True),
         }
