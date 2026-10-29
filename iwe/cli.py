@@ -1,3 +1,10 @@
+"""Command-line interface and execution runner for iwe.
+
+This module provides the Typer CLI application for discovering template bundles,
+inspecting sample mock payloads, previewing compiled templates in web browsers,
+and generating PDF documents with configurable paper sizes and margins.
+"""
+
 from datetime import datetime
 import json
 from pathlib import Path
@@ -29,7 +36,22 @@ def _prepare_rendered_document(
     templates_dir: Optional[Path] = None,
     json_mode: bool = False,
 ) -> Tuple[TemplateBundle, str]:
-    """Helper to locate bundle, validate payload, and compile HTML without code duplication."""
+    """Helper to locate a bundle, validate its payload, and compile its HTML template.
+
+    Args:
+        bundle_name: Slug name of the target template bundle.
+        data: Path to JSON payload file or inline JSON string.
+        templates_dir: Optional custom path to templates root directory.
+        json_mode: If True, error messages are formatted as JSON on stderr.
+
+    Returns:
+        Tuple[TemplateBundle, str]: A tuple of the resolved TemplateBundle object
+            and the fully compiled HTML string.
+
+    Raises:
+        typer.Exit(code=1): If bundle is missing, payload is invalid JSON, schema
+            loading fails, or payload validation fails.
+    """
     manager = BundleManager(templates_dir=templates_dir)
 
     # 1. Locate bundle
@@ -99,7 +121,7 @@ def list_bundles(
     ),
     json_output: bool = typer.Option(False, "--json", help="Output results in JSON format."),
 ) -> None:
-    """List all available template bundles."""
+    """List all available template bundles on disk."""
     manager = BundleManager(templates_dir=templates_dir)
     bundles = manager.list_bundles()
 
@@ -150,7 +172,7 @@ def show_sample(
         help="Path to the directory containing template bundles.",
     ),
 ) -> None:
-    """Print the sample payload for a given template bundle."""
+    """Print the sample payload for a given template bundle formatted as JSON."""
     manager = BundleManager(templates_dir=templates_dir)
     try:
         bundle = manager.get_bundle(bundle_name)
@@ -221,7 +243,7 @@ def generate(
     ),
     json_output: bool = typer.Option(False, "--json", help="Output results in JSON format."),
 ) -> None:
-    """Generate a PDF document from a template bundle and payload."""
+    """Generate a publication-grade PDF document from a template bundle and payload."""
     bundle, rendered_html = _prepare_rendered_document(bundle_name, data, templates_dir, json_mode=json_output)
 
     # Determine output destination
@@ -270,7 +292,7 @@ def generate(
         else:
             console.print(f"[green]Generated Document:[/green] {final_pdf_path}")
     except PdfRenderError as e:
-        if json_mode := json_output:
+        if json_output:
             err_console.print_json(json.dumps({"status": "error", "type": "PdfRenderError", "message": str(e)}))
         else:
             err_console.print(f"[red]Rendering Error:[/red] {e}")

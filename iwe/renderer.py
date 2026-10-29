@@ -1,3 +1,10 @@
+"""Playwright headless Chromium rendering engine for printing HTML to PDF.
+
+This module automates headless Chromium via Playwright, providing sandboxed
+execution, relative asset resolution via base URI injection, and dual
+render-readiness synchronization before snapshotting pages to PDF.
+"""
+
 import shutil
 import tempfile
 from pathlib import Path
@@ -6,12 +13,16 @@ from playwright.sync_api import sync_playwright
 
 
 class PdfRenderError(Exception):
-    """Raised when PDF rendering via Playwright fails."""
+    """Raised when PDF rendering or Playwright browser execution fails."""
     pass
 
 
 class PdfRenderer:
-    """Renders compiled HTML to PDF using Playwright headless Chromium."""
+    """Renders compiled HTML documents to PDF using Playwright headless Chromium.
+
+    Handles headless browser lifecycle, isolated filesystem sandboxing,
+    relative stylesheet and image resolution, and dynamic readiness gates.
+    """
 
     def render(
         self,
@@ -21,6 +32,22 @@ class PdfRenderer:
         config: dict[str, Any] | None = None,
         ready_selector: str = "#render-ready",
     ) -> Path:
+        """Render an HTML string to a PDF file on disk.
+
+        Args:
+            html_content: The compiled HTML markup to render.
+            output_path: Destination path where the PDF will be saved.
+            base_dir: Path to the template bundle directory for relative asset resolution.
+            config: Optional print configuration dictionary (format, landscape, margins, headers/footers).
+            ready_selector: CSS selector to optionally wait for before capturing PDF. Defaults to '#render-ready'.
+
+        Returns:
+            Path: The resolved absolute path of the generated PDF document.
+
+        Raises:
+            PdfRenderError: If Playwright fails to launch, the page throws a critical
+                navigation error, or the PDF generation fails.
+        """
         output_path = output_path.resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
         config = config or {}
