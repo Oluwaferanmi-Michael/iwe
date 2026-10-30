@@ -8,6 +8,7 @@ sample mock data, and static assets.
 
 import importlib.util
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Type
@@ -22,6 +23,47 @@ class BundleNotFoundError(Exception):
 class SchemaLoadError(Exception):
     """Raised when a bundle's schema.py fails to load, cannot be imported, or lacks a Schema class."""
     pass
+
+
+def resolve_templates_dir(custom_path: Path | None = None, prefer_creation: bool = False) -> Path:
+    """Resolve the active templates directory based on four-tier precedence:
+
+    1. Explicit custom path argument / CLI option.
+    2. IWE_TEMPLATES_DIR environment variable.
+    3. Local workspace ./iwe-templates if it exists.
+    4. Local workspace ./templates if it exists (legacy compatibility).
+    5. User home directory ~/.iwe/templates (or ./iwe-templates if prefer_creation is True).
+
+    Args:
+        custom_path: Explicit directory path passed by caller.
+        prefer_creation: If True and no existing directory matches, returns ./iwe-templates.
+
+    Returns:
+        Path: The resolved directory path.
+    """
+    if custom_path is not None:
+        return custom_path
+
+    env_dir = os.environ.get("IWE_TEMPLATES_DIR")
+    if env_dir:
+        return Path(env_dir)
+
+    local_iwe = Path.cwd() / "iwe-templates"
+    if local_iwe.is_dir():
+        return local_iwe
+
+    local_legacy = Path.cwd() / "templates"
+    if local_legacy.is_dir():
+        return local_legacy
+
+    if prefer_creation:
+        return local_iwe
+
+    user_home_templates = Path.home() / ".iwe" / "templates"
+    if user_home_templates.is_dir():
+        return user_home_templates
+
+    return local_iwe
 
 
 @dataclass
@@ -160,9 +202,11 @@ class BundleManager:
         """Initialize BundleManager with an optional custom templates directory.
 
         Args:
-            templates_dir: Path to directory containing bundles. Defaults to `./templates`.
+            templates_dir: Path to directory containing bundles. If omitted,
+                resolved via 4-tier precedence: custom -> IWE_TEMPLATES_DIR ->
+                ./iwe-templates -> ./templates -> ~/.iwe/templates.
         """
-        self.templates_dir = templates_dir or (Path.cwd() / "templates")
+        self.templates_dir = resolve_templates_dir(templates_dir)
 
     def list_bundles(self) -> list[TemplateBundle]:
         """Scan the templates directory and return all discovered bundles.

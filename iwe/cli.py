@@ -2,7 +2,8 @@
 
 This module provides the Typer CLI application for discovering template bundles,
 inspecting sample mock payloads, previewing compiled templates in web browsers,
-and generating PDF documents with configurable paper sizes and margins.
+generating publication-grade PDF documents, scaffolding new template bundles,
+viewing guides, and installing AI agent skills.
 """
 
 from datetime import datetime
@@ -18,13 +19,19 @@ from rich.table import Table
 
 from iwe.bundle import BundleManager, BundleNotFoundError, SchemaLoadError, TemplateBundle
 from iwe.compiler import TemplateCompiler, load_payload_data, validate_payload
+from iwe.guide import display_guide
 from iwe.renderer import PdfRenderer, PdfRenderError, normalize_paper_format
+from iwe.scaffold import scaffold_bundle
+from iwe.skill import install_skill
 
 app = typer.Typer(
     name="iwe",
     help="iwe - CLI tool and engine for generating PDF documents from external HTML/Jinja2 template bundles.",
     no_args_is_help=True,
 )
+
+skill_app = typer.Typer(name="skill", help="Manage iwe AI coding agent skills.")
+app.add_typer(skill_app, name="skill")
 
 console = Console()
 err_console = Console(stderr=True)
@@ -309,6 +316,109 @@ def generate(
         else:
             err_console.print(f"[red]Rendering Error:[/red] {e}")
         raise typer.Exit(code=2)
+
+
+@app.command("new")
+def new_bundle(
+    bundle_name: str = typer.Argument(..., help="Slug name of the new template bundle."),
+    templates_dir: Optional[Path] = typer.Option(
+        None,
+        "--templates-dir",
+        "-t",
+        help="Path to the directory containing template bundles.",
+    ),
+    interactive: bool = typer.Option(
+        False,
+        "--interactive",
+        "-i",
+        help="Prompt interactively for document title and page layout.",
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Output results in JSON format."),
+) -> None:
+    """Scaffold a new minimal runnable template bundle."""
+    try:
+        bundle_path = scaffold_bundle(
+            bundle_name=bundle_name,
+            templates_dir=templates_dir,
+            interactive=interactive,
+        )
+        if json_output:
+            console.print_json(json.dumps({
+                "status": "success",
+                "bundle_name": bundle_name,
+                "bundle_path": str(bundle_path),
+            }))
+        else:
+            console.print(f"[green]Successfully created template bundle:[/green] {bundle_path}")
+            console.print(f"To preview: [bold]iwe preview {bundle_name} --data {bundle_path / 'sample.json'}[/bold]")
+    except Exception as e:
+        if json_output:
+            err_console.print_json(json.dumps({"status": "error", "type": e.__class__.__name__, "message": str(e)}))
+        else:
+            err_console.print(f"[red]Scaffolding Error:[/red] {e}")
+        raise typer.Exit(code=1)
+
+
+@app.command("scaffold", hidden=True)
+def scaffold_alias(
+    bundle_name: str = typer.Argument(..., help="Slug name of the new template bundle."),
+    templates_dir: Optional[Path] = typer.Option(
+        None,
+        "--templates-dir",
+        "-t",
+        help="Path to the directory containing template bundles.",
+    ),
+    interactive: bool = typer.Option(
+        False,
+        "--interactive",
+        "-i",
+        help="Prompt interactively for document title and page layout.",
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Output results in JSON format."),
+) -> None:
+    """Alias for 'iwe new'."""
+    new_bundle(bundle_name=bundle_name, templates_dir=templates_dir, interactive=interactive, json_output=json_output)
+
+
+@app.command("guide")
+def guide_command(
+    topic: str = typer.Option("all", "--topic", help="Topic to view: 'cli', 'templates', or 'all'."),
+    export: Optional[Path] = typer.Option(None, "--export", "-e", help="Directory path to export markdown documentation files."),
+) -> None:
+    """Display comprehensive CLI and template generation guides, or export markdown files."""
+    try:
+        display_guide(topic=topic, export_dir=export, console=console)
+    except Exception as e:
+        err_console.print(f"[red]Error displaying guide:[/red] {e}")
+        raise typer.Exit(code=1)
+
+
+@app.command("docs", hidden=True)
+def docs_alias(
+    topic: str = typer.Option("all", "--topic", help="Topic to view: 'cli', 'templates', or 'all'."),
+    export: Optional[Path] = typer.Option(None, "--export", "-e", help="Directory path to export markdown documentation files."),
+) -> None:
+    """Alias for 'iwe guide'."""
+    guide_command(topic=topic, export=export)
+
+
+@skill_app.command("install")
+def install_agent_skill(
+    json_output: bool = typer.Option(False, "--json", help="Output results in JSON format."),
+) -> None:
+    """Install the iwe agent skill into .agents/skills/iwe/SKILL.md."""
+    try:
+        dest = install_skill()
+        if json_output:
+            console.print_json(json.dumps({"status": "success", "installed_path": str(dest)}))
+        else:
+            console.print(f"[green]Successfully installed agent skill to:[/green] {dest}")
+    except Exception as e:
+        if json_output:
+            err_console.print_json(json.dumps({"status": "error", "message": str(e)}))
+        else:
+            err_console.print(f"[red]Error installing agent skill:[/red] {e}")
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":

@@ -35,3 +35,15 @@ _Avoid_: Mock view, test render
 **Render Ready Signal**:
 An optional DOM selector or window condition that dynamic templates use to inform the renderer that asynchronous assets (fonts, charts) have fully completed rendering.
 _Avoid_: Done trigger, finish hook
+
+**Bundle Scaffolding**:
+The automated generation of a new, minimal runnable Template Bundle (`template.html`, `schema.py`, `config.json`, `sample.json`, `assets/`) via `iwe new`.
+_Avoid_: Template cloning, boilerplate generation
+
+**Templates Directory**:
+The directory resolved by `iwe` (via `--templates-dir`, `IWE_TEMPLATES_DIR`, `./iwe-templates`, or user fallback) where Template Bundles are discovered and stored.
+_Avoid_: Bundle root, theme path
+
+**Agent Skill**:
+The standardized instructions and metadata (`SKILL.md`) enabling AI coding assistants to author bundles, validate schemas, and generate documents autonomously.
+_Avoid_: Agent prompt, LLM context

@@ -24,6 +24,13 @@ dev = [
 [project.scripts]
 iwe = "iwe.cli:app"
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["iwe*"]
+
+[tool.setuptools.package-data]
+iwe = ["resources/**"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
